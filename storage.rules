@@ -1,0 +1,51 @@
+// storage.rules
+//
+// Deploy with: firebase deploy --only storage
+//
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Helper functions ───────────────────────────────────────────────
+    function isSignedIn()   { return request.auth != null; }
+    function isOwner(uid)   { return request.auth.uid == uid; }
+    function isVerified()   { return request.auth.token.email_verified; }
+    function maxSize(mb)    { return request.resource.size <= mb * 1024 * 1024; }
+    function isAllowedType(){
+      return request.resource.contentType.matches('application/pdf')
+          || request.resource.contentType.matches('image/.*')
+          || request.resource.contentType.matches('application/vnd.openxmlformats.*')
+          || request.resource.contentType.matches('application/msword');
+    }
+
+    // ── User uploads ───────────────────────────────────────────────────
+    // Path: users/{uid}/uploads/{filename}
+    match /users/{uid}/uploads/{filename} {
+      // Read: owner only
+      allow read: if isSignedIn() && isOwner(uid);
+
+      // Write: owner, verified email, allowed file type, max 10MB
+      allow write: if isSignedIn()
+                   && isOwner(uid)
+                   && isVerified()
+                   && maxSize(10)
+                   && isAllowedType();
+
+      // Delete: owner only
+      allow delete: if isSignedIn() && isOwner(uid);
+    }
+
+    // ── User avatars (future) ──────────────────────────────────────────
+    // Path: users/{uid}/avatar/profile.jpg
+    match /users/{uid}/avatar/{filename} {
+      allow read:   if isSignedIn();
+      allow write:  if isSignedIn() && isOwner(uid) && maxSize(2);
+      allow delete: if isSignedIn() && isOwner(uid);
+    }
+
+    // ── Block everything else ──────────────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

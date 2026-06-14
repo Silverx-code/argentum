@@ -1,0 +1,78 @@
+// firestore.rules
+//
+// Deploy with: firebase deploy --only firestore:rules
+//
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ───────────────────────────────────────────────
+    function isSignedIn()        { return request.auth != null; }
+    function isOwner(uid)        { return request.auth.uid == uid; }
+    function isVerified()        { return request.auth.token.email_verified; }
+    function isPro()             {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.plan
+             in ['pro', 'elite'];
+    }
+
+    // ── Users collection ───────────────────────────────────────────────
+    // Each user can only read/write their own document.
+    match /users/{uid} {
+      allow read:   if isSignedIn() && isOwner(uid);
+      allow create: if isSignedIn() && isOwner(uid)
+                    && request.resource.data.uid == uid;
+      allow update: if isSignedIn() && isOwner(uid)
+                    // Prevent users from self-granting pro plan
+                    && !('plan' in request.resource.data.diff(resource.data).affectedKeys())
+                    && !('subscriptionExpiry' in request.resource.data.diff(resource.data).affectedKeys());
+      allow delete: if isSignedIn() && isOwner(uid);
+    }
+
+    // ── Uploaded files metadata ────────────────────────────────────────
+    match /files/{fileId} {
+      allow read:   if isSignedIn() && isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isVerified()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.fileSize <= 10 * 1024 * 1024; // 10MB
+      allow delete: if isSignedIn() && isOwner(resource.data.userId);
+      allow update: if false; // files are immutable after upload
+    }
+
+    // ── Questions ──────────────────────────────────────────────────────
+    match /questions/{questionId} {
+      allow read:   if isSignedIn() && isOwner(resource.data.userId);
+      allow create: if false;  // only Cloud Functions write questions
+      allow update: if false;
+      allow delete: if isSignedIn() && isOwner(resource.data.userId);
+    }
+
+    // ── Test sessions ──────────────────────────────────────────────────
+    match /sessions/{sessionId} {
+      allow read:   if isSignedIn() && isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isVerified()
+                    && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner(resource.data.userId)
+                    // Can only update score/answers, not userId or createdAt
+                    && !('userId'    in request.resource.data.diff(resource.data).affectedKeys())
+                    && !('createdAt' in request.resource.data.diff(resource.data).affectedKeys());
+      allow delete: if false;
+    }
+
+    // ── User weaknesses ────────────────────────────────────────────────
+    match /weaknesses/{uid} {
+      allow read:  if isSignedIn() && isOwner(uid);
+      allow write: if false; // only Cloud Functions update weaknesses
+    }
+
+    // ── Subscriptions (written by Paystack webhook via backend) ────────
+    match /subscriptions/{uid} {
+      allow read:  if isSignedIn() && isOwner(uid);
+      allow write: if false; // only backend service account writes here
+    }
+
+    // ── Block all other reads/writes ───────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
