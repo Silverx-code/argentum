@@ -27,7 +27,18 @@ class AuthService {
   Stream<UserModel?> get authStateChanges {
     return _auth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) return null;
-      return _getUserFromFirestore(firebaseUser.uid);
+      // Try Firestore first, fall back to basic UserModel from Firebase
+      final firestoreUser = await _getUserFromFirestore(firebaseUser.uid);
+      if (firestoreUser != null) return firestoreUser;
+      // Firestore doc not yet created — return basic UserModel so nav works
+      return UserModel(
+        uid: firebaseUser.uid,
+        email: firebaseUser.email ?? '',
+        displayName: firebaseUser.displayName ?? '',
+        emailVerified: firebaseUser.emailVerified,
+        plan: SubscriptionPlan.free,
+        createdAt: DateTime.now(),
+      );
     });
   }
 
@@ -104,11 +115,29 @@ class AuthService {
       await user.reload();
       final refreshed = _auth.currentUser!;
 
-      // Update Firestore: lastLoginAt + emailVerified status
-      await _users.doc(user.uid).update({
-        'lastLoginAt':   Timestamp.fromDate(DateTime.now()),
-        'emailVerified': refreshed.emailVerified,
-      });
+      // Update Firestore: lastLoginAt + emailVerified status.
+      // If the doc is missing (e.g. an orphaned Auth account from a
+      // signup that failed partway through), back-fill it instead of
+      // crashing on update().
+      final docRef = _users.doc(user.uid);
+      final docSnap = await docRef.get();
+
+      if (!docSnap.exists) {
+        final userModel = UserModel(
+          uid:           user.uid,
+          email:         refreshed.email ?? email.trim(),
+          displayName:   refreshed.displayName ?? '',
+          emailVerified: refreshed.emailVerified,
+          createdAt:     DateTime.now(),
+          lastLoginAt:   DateTime.now(),
+        );
+        await docRef.set(userModel.toFirestore());
+      } else {
+        await docRef.update({
+          'lastLoginAt':   Timestamp.fromDate(DateTime.now()),
+          'emailVerified': refreshed.emailVerified,
+        });
+      }
 
       return (await _getUserFromFirestore(user.uid))!;
     } on FirebaseAuthException catch (e) {
@@ -149,10 +178,14 @@ class AuthService {
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user!;
 
-      // 4. Check if this is a new user — create Firestore doc if so
+      // 4. Check if this is a new user — create Firestore doc if so.
+      // Also treat "existing user but doc missing" the same way, so an
+      // orphaned account self-heals instead of throwing on update().
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+      final docRef = _users.doc(user.uid);
+      final docSnap = isNewUser ? null : await docRef.get();
 
-      if (isNewUser) {
+      if (isNewUser || docSnap == null || !docSnap.exists) {
         final userModel = UserModel(
           uid:           user.uid,
           email:         user.email!,
@@ -162,11 +195,11 @@ class AuthService {
           createdAt:     DateTime.now(),
           lastLoginAt:   DateTime.now(),
         );
-        await _users.doc(user.uid).set(userModel.toFirestore());
+        await docRef.set(userModel.toFirestore());
         return userModel;
       } else {
-        // Existing user — update lastLoginAt
-        await _users.doc(user.uid).update({
+        // Existing user with an existing doc — update lastLoginAt
+        await docRef.update({
           'lastLoginAt':   Timestamp.fromDate(DateTime.now()),
           'emailVerified': true,
         });
@@ -208,8 +241,12 @@ class AuthService {
     await user.reload();
     final verified = _auth.currentUser?.emailVerified ?? false;
     if (verified) {
-      // Update Firestore
-      await _users.doc(user.uid).update({'emailVerified': true});
+      // Update Firestore. Use set(merge: true) instead of update() so
+      // this can't throw if the doc happens to be missing.
+      await _users.doc(user.uid).set(
+        {'emailVerified': true},
+        SetOptions(merge: true),
+      );
     }
     return verified;
   }
@@ -248,7 +285,9 @@ class AuthService {
       }
 
       if (updates.isNotEmpty) {
-        await _users.doc(user.uid).update(updates);
+        // set(merge: true) instead of update() so this self-heals if the
+        // Firestore doc was never created for this account.
+        await _users.doc(user.uid).set(updates, SetOptions(merge: true));
       }
 
       return (await _getUserFromFirestore(user.uid))!;
