@@ -31,13 +31,24 @@ class ApiService {
         handler.next(options);
       },
       onError: (DioException e, handler) async {
-        // 401 → try refreshing token once
-        if (e.response?.statusCode == 401) {
-          final newToken = await _refreshToken();
+        final isAuthError = e.response?.statusCode == 401;
+        final alreadyRetried = e.requestOptions.extra['retried'] == true;
+
+        // 401 → try refreshing token once, but never more than once per request
+        if (isAuthError && !alreadyRetried) {
+          final newToken = await _getToken(forceRefresh: true);
           if (newToken != null) {
+            e.requestOptions.extra['retried'] = true; // stops the retry loop
             e.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-            final retry = await _dio.fetch(e.requestOptions);
-            return handler.resolve(retry);
+            try {
+              final retry = await _dio.fetch(e.requestOptions);
+              return handler.resolve(retry);
+            } catch (_) {
+              // Retry itself failed (e.g. still unauthorized, or network
+              // issue) — fall through and propagate the original error
+              // instead of looping again.
+              return handler.next(e);
+            }
           }
         }
         handler.next(e);
@@ -45,20 +56,25 @@ class ApiService {
     ));
   }
 
-  Future<String?> _getToken() async {
-    try {
-      return await FirebaseAuth.instance.currentUser?.getIdToken();
-    } catch (_) {
-      return null;
-    }
-  }
+  // Fetches the current Firebase ID token. Set [forceRefresh] to true to
+  // force a refresh against securetoken.googleapis.com (e.g. after a 401).
+  // Retries once on transient failure (e.g. network blip reaching Google's
+  // token endpoint) before giving up, and times out instead of hanging.
+  Future<String?> _getToken({bool forceRefresh = false}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null; // not signed in — don't even attempt
 
-  Future<String?> _refreshToken() async {
-    try {
-      return await FirebaseAuth.instance.currentUser?.getIdToken(true);
-    } catch (_) {
-      return null;
+    for (int attempt = 1; attempt <= 2; attempt++) {
+      try {
+        return await user
+            .getIdToken(forceRefresh)
+            .timeout(const Duration(seconds: 8));
+      } catch (_) {
+        if (attempt == 2) return null;
+        await Future.delayed(Duration(milliseconds: 400 * attempt));
+      }
     }
+    return null;
   }
 
   // ─── Dashboard ──────────────────────────────────────────────────────
