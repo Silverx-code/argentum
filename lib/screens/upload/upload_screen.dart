@@ -1,10 +1,9 @@
 // lib/screens/upload/upload_screen.dart
 import 'dart:async';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:path/path.dart' as p;
 import '../../providers/app_provider.dart';
 import '../../models/models.dart';
 import '../../services/api_service.dart';
@@ -63,14 +62,23 @@ class _UploadScreenState extends State<UploadScreen>
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: _allowedExtensions,
+      // Always read bytes so this works on web (where path is unavailable)
+      withData: true,
     );
     if (result == null || result.files.isEmpty) return;
 
     final picked = result.files.first;
-    if (picked.path == null) return;
 
-    final file = File(picked.path!);
-    final sizeMb = await file.length() / (1024 * 1024);
+    // Use .bytes on web, .path on native — bytes is always available when
+    // withData: true is set, so we prefer it universally.
+    final bytes = picked.bytes;
+    if (bytes == null) {
+      setState(() => _uploadError = 'Could not read file. Please try again.');
+      return;
+    }
+
+    // picked.size is in bytes; convert to MB
+    final sizeMb = picked.size / (1024 * 1024);
     if (sizeMb > 25) {
       setState(() => _uploadError = 'File too large. Max 25MB.');
       return;
@@ -79,7 +87,8 @@ class _UploadScreenState extends State<UploadScreen>
     setState(() => _uploading = true);
 
     try {
-      final data = await _api.uploadFile(file, picked.name);
+      // Pass bytes + filename to the API service
+      final data = await _api.uploadFileBytes(bytes, picked.name);
       final record = UploadedFileRecord.fromJson(data);
       if (!mounted) return;
       context.read<AppProvider>().addFile(record);
@@ -97,11 +106,15 @@ class _UploadScreenState extends State<UploadScreen>
     }
   }
 
+  int _pollFailures = 0;
+
   void _startPolling(String fileId) {
     _pollTimer?.cancel();
+    _pollFailures = 0;
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
       try {
         final data = await _api.getFileStatus(fileId);
+        _pollFailures = 0; // reset on success
         final status = data['status'] as String;
         final topic = data['topic_name'] as String?;
         final count = data['questions_generated'] as int? ?? 0;
@@ -131,7 +144,19 @@ class _UploadScreenState extends State<UploadScreen>
                 : 'Analysing content…';
           });
         }
-      } catch (_) {}
+      } catch (_) {
+        _pollFailures++;
+        if (_pollFailures >= 5) {
+          _pollTimer?.cancel();
+          if (mounted) {
+            setState(() {
+              _processingFileId = null;
+              _processingStatus = '';
+              _uploadError = 'Lost connection while checking status. The file may still process — check back later.';
+            });
+          }
+        }
+      }
     });
   }
 
@@ -143,7 +168,7 @@ class _UploadScreenState extends State<UploadScreen>
         Expanded(child: Text('$topic · $count questions ready',
             style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
       ]),
-      backgroundColor: AppColors.success.withOpacity(0.9),
+      backgroundColor: AppColors.success.withValues(alpha:0.9),
       duration: const Duration(seconds: 4),
     ));
     context.read<AppProvider>().loadTopics();
@@ -188,8 +213,8 @@ class _UploadScreenState extends State<UploadScreen>
                     color: AppColors.surface,
                     border: Border.all(
                       color: _processingFileId != null
-                          ? AppColors.blue.withOpacity(0.3 + _pulseCtrl.value * 0.3)
-                          : AppColors.blue.withOpacity(0.15),
+                          ? AppColors.blue.withValues(alpha:0.3 + _pulseCtrl.value * 0.3)
+                          : AppColors.blue.withValues(alpha:0.15),
                       width: 1.5,
                     ),
                     borderRadius: BorderRadius.circular(20),
@@ -212,8 +237,8 @@ class _UploadScreenState extends State<UploadScreen>
                                 Container(
                                   width: 52, height: 52,
                                   decoration: BoxDecoration(
-                                    color: AppColors.blue.withOpacity(0.08),
-                                    border: Border.all(color: AppColors.blue.withOpacity(0.2)),
+                                    color: AppColors.blue.withValues(alpha:0.08),
+                                    border: Border.all(color: AppColors.blue.withValues(alpha:0.2)),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: const Icon(Icons.upload_file_rounded,
@@ -241,8 +266,8 @@ class _UploadScreenState extends State<UploadScreen>
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.08),
-                  border: Border.all(color: AppColors.error.withOpacity(0.25)),
+                  color: AppColors.error.withValues(alpha:0.08),
+                  border: Border.all(color: AppColors.error.withValues(alpha:0.25)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(children: [
@@ -322,7 +347,7 @@ class _ProcessingView extends StatelessWidget {
             width: 52 + pulseValue * 10,
             height: 52 + pulseValue * 10,
             decoration: BoxDecoration(
-              color: AppColors.blue.withOpacity(0.05 + pulseValue * 0.05),
+              color: AppColors.blue.withValues(alpha:0.05 + pulseValue * 0.05),
               borderRadius: BorderRadius.circular(26),
             ),
           ),
@@ -331,7 +356,7 @@ class _ProcessingView extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Text(status, style: TextStyle(
-          fontSize: 12, color: AppColors.blue.withOpacity(0.8 + pulseValue * 0.2),
+          fontSize: 12, color: AppColors.blue.withValues(alpha:0.8 + pulseValue * 0.2),
           fontFamily: 'monospace', fontWeight: FontWeight.w600)),
       const SizedBox(height: 6),
       const MonoLabel('This may take 30–60 seconds', fontSize: 8),
@@ -365,7 +390,7 @@ class _FileCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: _statusColor.withOpacity(0.15)),
+        border: Border.all(color: _statusColor.withValues(alpha:0.15)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(children: [
@@ -385,7 +410,7 @@ class _FileCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: _statusColor.withOpacity(0.1),
+                color: _statusColor.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(5),
               ),
               child: MonoLabel(file.status, color: _statusColor, fontSize: 7),
@@ -408,7 +433,7 @@ class _FileCard extends StatelessWidget {
             child: Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.08),
+                color: AppColors.error.withValues(alpha:0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.delete_outline, color: AppColors.error, size: 14),

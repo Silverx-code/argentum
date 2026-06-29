@@ -73,7 +73,7 @@ class _DashboardPage extends StatelessWidget {
                   const MonoLabel('Welcome back'),
                   const SizedBox(height: 4),
                   Text(
-                    auth.user?.displayName?.split(' ').first ?? 'Student',
+                    auth.user?.displayName.split(' ').first ?? 'Student',
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900,
                         color: AppColors.textPrimary, letterSpacing: 0.5),
                   ),
@@ -83,8 +83,8 @@ class _DashboardPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.blue.withOpacity(0.1),
-                        border: Border.all(color: AppColors.blue.withOpacity(0.2)),
+                        color: AppColors.blue.withValues(alpha:0.1),
+                        border: Border.all(color: AppColors.blue.withValues(alpha:0.2)),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(children: [
@@ -124,8 +124,8 @@ class _DashboardPage extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [AppColors.error.withOpacity(0.12), AppColors.error.withOpacity(0.06)]),
-                      border: Border.all(color: AppColors.error.withOpacity(0.25)),
+                      gradient: LinearGradient(colors: [AppColors.error.withValues(alpha:0.12), AppColors.error.withValues(alpha:0.06)]),
+                      border: Border.all(color: AppColors.error.withValues(alpha:0.25)),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(children: [
@@ -134,7 +134,7 @@ class _DashboardPage extends StatelessWidget {
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         const Text('Recovery Sessions Ready', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                         const SizedBox(height: 2),
-                        MonoLabel('${dash!.recoverySessionsAvailable} weak topics detected', color: AppColors.error.withOpacity(0.8)),
+                        MonoLabel('${dash!.recoverySessionsAvailable} weak topics detected', color: AppColors.error.withValues(alpha:0.8)),
                       ])),
                       const Icon(Icons.chevron_right, color: AppColors.error, size: 18),
                     ]),
@@ -148,14 +148,14 @@ class _DashboardPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: SurfaceCard(
-                borderColor: AppColors.blue.withOpacity(0.2),
+                borderColor: AppColors.blue.withValues(alpha:0.2),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UploadScreen())),
                 child: Row(children: [
                   Container(
                     width: 44, height: 44,
                     decoration: BoxDecoration(
-                      color: AppColors.blue.withOpacity(0.12),
-                      border: Border.all(color: AppColors.blue.withOpacity(0.3)),
+                      color: AppColors.blue.withValues(alpha:0.12),
+                      border: Border.all(color: AppColors.blue.withValues(alpha:0.3)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.add_rounded, color: AppColors.blue, size: 22),
@@ -231,7 +231,7 @@ class _StatCard extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface, border: Border.all(color: AppColors.blue.withOpacity(0.1)),
+        color: AppColors.surface, border: Border.all(color: AppColors.blue.withValues(alpha:0.1)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -267,7 +267,7 @@ class _QuickAction extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface, border: Border.all(color: color.withOpacity(0.15)),
+        color: AppColors.surface, border: Border.all(color: color.withValues(alpha:0.15)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

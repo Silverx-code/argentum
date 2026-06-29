@@ -19,6 +19,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   List<Map<String, dynamic>> _weeklyProgress = [];
   List<Map<String, dynamic>> _learningGraph = [];
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -27,7 +28,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = null; });
     try {
       final results = await Future.wait([
         _api.getStats(),
@@ -43,9 +44,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ?.cast<Map<String, dynamic>>() ?? [];
         _learningGraph = results[3] as List<Map<String, dynamic>>;
         _loading = false;
+        _error = null;
       });
     } catch (_) {
-      setState(() => _loading = false);
+      setState(() { _loading = false; _error = 'Failed to load progress data. Check your connection.'; });
     }
   }
 
@@ -96,6 +98,33 @@ class _ProgressScreenState extends State<ProgressScreen> {
               child: Padding(
                 padding: EdgeInsets.only(top: 80),
                 child: Center(child: CircularProgressIndicator(color: AppColors.blue)),
+              ),
+            )
+          else if (_error != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 80),
+                child: Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.cloud_off, color: AppColors.textDim, size: 40),
+                    const SizedBox(height: 12),
+                    Text(_error!, style: const TextStyle(fontSize: 12, color: AppColors.textDim,
+                        fontFamily: 'monospace'), textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _load,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.blue.withValues(alpha: 0.1),
+                          border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const MonoLabel('Tap to Retry', color: AppColors.blue),
+                      ),
+                    ),
+                  ]),
+                ),
               ),
             )
           else ...[
@@ -189,8 +218,8 @@ class _AllTimeStats extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: AppColors.blue.withOpacity(0.08),
-            border: Border.all(color: AppColors.blue.withOpacity(0.15)),
+            color: AppColors.blue.withValues(alpha:0.08),
+            border: Border.all(color: AppColors.blue.withValues(alpha:0.15)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: MonoLabel(stats['rank_label'] as String? ?? 'Student',
@@ -209,7 +238,7 @@ class _AllTimeStats extends StatelessWidget {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: Border.all(color: item.color.withOpacity(0.1)),
+            border: Border.all(color: item.color.withValues(alpha:0.1)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -249,7 +278,7 @@ class _WeeklyChart extends StatelessWidget {
                 show: true,
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (_) => FlLine(
-                    color: Colors.white.withOpacity(0.04), strokeWidth: 1),
+                    color: Colors.white.withValues(alpha:0.04), strokeWidth: 1),
               ),
               titlesData: FlTitlesData(
                 bottomTitles: AxisTitles(
@@ -301,8 +330,8 @@ class _WeeklyChart extends StatelessWidget {
                   belowBarData: BarAreaData(
                     show: true,
                     gradient: LinearGradient(
-                      colors: [AppColors.blue.withOpacity(0.15),
-                        AppColors.blue.withOpacity(0)],
+                      colors: [AppColors.blue.withValues(alpha:0.15),
+                        AppColors.blue.withValues(alpha:0)],
                       begin: Alignment.topCenter, end: Alignment.bottomCenter,
                     ),
                   ),
@@ -331,7 +360,7 @@ class _TopicBreakdownRow extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: statusColor.withOpacity(0.1)),
+        border: Border.all(color: statusColor.withValues(alpha:0.1)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(children: [
@@ -356,7 +385,7 @@ class _TopicBreakdownRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.08),
+            color: statusColor.withValues(alpha:0.08),
             borderRadius: BorderRadius.circular(7),
           ),
           child: MonoLabel(status.replaceAll('_', ' '), color: statusColor, fontSize: 7),
@@ -390,7 +419,7 @@ class _LearningGraphCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.blue.withOpacity(0.08)),
+        border: Border.all(color: AppColors.blue.withValues(alpha:0.08)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -437,8 +466,8 @@ class _GraphChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
     decoration: BoxDecoration(
-      color: color.withOpacity(0.08),
-      border: Border.all(color: color.withOpacity(0.2)),
+      color: color.withValues(alpha:0.08),
+      border: Border.all(color: color.withValues(alpha:0.2)),
       borderRadius: BorderRadius.circular(6),
     ),
     child: Row(mainAxisSize: MainAxisSize.min, children: [

@@ -123,12 +123,26 @@ class AuthProvider extends ChangeNotifier {
   // EMAIL VERIFICATION
   // ─────────────────────────────────────────────────────────────────────
 
-  Future<void> resendVerificationEmail() async {
+  /// Returns true if Firebase accepted the send request, false otherwise.
+  /// On failure, [errorMessage]/[errorDetail] are populated so the UI can
+  /// show the real reason (e.g. too-many-requests throttling) instead of
+  /// failing silently.
+  Future<bool> resendVerificationEmail() async {
     _setLoading(true);
     try {
       await _authService.sendVerificationEmail();
+      _clearError();
+      notifyListeners();
+      return true;
     } on AuthException catch (e) {
-      _setError(e.message, e.detail);
+      // Surface the message WITHOUT flipping global status to `error`.
+      // The user is still authenticated — a failed resend must not bounce
+      // them off the verify screen (_RootNavigator treats non-authenticated
+      // status as signed-out).
+      _errorMessage = e.message;
+      _errorDetail  = e.detail;
+      notifyListeners();
+      return false;
     } finally {
       _setLoading(false);
     }

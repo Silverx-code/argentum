@@ -127,8 +127,13 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
     final timerColor = timerRatio > 0.5 ? AppColors.blue
         : timerRatio > 0.25 ? AppColors.warning : AppColors.error;
 
-    return WillPopScope(
-      onWillPop: () => _confirmAbandon(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldPop = await _confirmAbandon();
+        if (shouldPop && mounted) Navigator.of(context).pop();
+      },
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
@@ -142,8 +147,8 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: timerColor.withOpacity(0.1),
-                      border: Border.all(color: timerColor.withOpacity(0.3)),
+                      color: timerColor.withValues(alpha:0.1),
+                      border: Border.all(color: timerColor.withValues(alpha:0.3)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -167,7 +172,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                 child: LinearProgressIndicator(
                   value: (prov.currentQuestionIndex + 1) / prov.sessionQuestions.length,
                   minHeight: 3,
-                  backgroundColor: Colors.white.withOpacity(0.05),
+                  backgroundColor: Colors.white.withValues(alpha:0.05),
                   valueColor: const AlwaysStoppedAnimation(AppColors.blue),
                 ),
               ),
@@ -182,7 +187,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                   child: LinearProgressIndicator(
                     value: timerRatio.clamp(0, 1),
                     minHeight: 2,
-                    backgroundColor: Colors.white.withOpacity(0.04),
+                    backgroundColor: Colors.white.withValues(alpha:0.04),
                     valueColor: AlwaysStoppedAnimation(timerColor),
                   ),
                 ),
@@ -209,7 +214,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(16),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   SurfaceCard(
-                    borderColor: AppColors.blue.withOpacity(0.1),
+                    borderColor: AppColors.blue.withValues(alpha:0.1),
                     child: Text(question.questionText,
                         style: const TextStyle(fontSize: 15, color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600, height: 1.6)),
@@ -227,9 +232,9 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                     Color bgColor = AppColors.surface;
                     Color textColor = AppColors.textSecondary;
 
-                    if (isCorrect) { borderColor = AppColors.success.withOpacity(0.5); bgColor = AppColors.success.withOpacity(0.06); textColor = AppColors.success; }
-                    else if (isWrong) { borderColor = AppColors.error.withOpacity(0.5); bgColor = AppColors.error.withOpacity(0.06); textColor = AppColors.error; }
-                    else if (isSelected && _result == null) { borderColor = AppColors.blue.withOpacity(0.5); bgColor = AppColors.blue.withOpacity(0.07); textColor = AppColors.blue; }
+                    if (isCorrect) { borderColor = AppColors.success.withValues(alpha:0.5); bgColor = AppColors.success.withValues(alpha:0.06); textColor = AppColors.success; }
+                    else if (isWrong) { borderColor = AppColors.error.withValues(alpha:0.5); bgColor = AppColors.error.withValues(alpha:0.06); textColor = AppColors.error; }
+                    else if (isSelected && _result == null) { borderColor = AppColors.blue.withValues(alpha:0.5); bgColor = AppColors.blue.withValues(alpha:0.07); textColor = AppColors.blue; }
 
                     return GestureDetector(
                       onTap: _result == null ? () => setState(() => _selected = letter) : null,
@@ -246,9 +251,9 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                           Container(
                             width: 26, height: 26,
                             decoration: BoxDecoration(
-                              color: isCorrect ? AppColors.success.withOpacity(0.2)
-                                  : isSelected ? AppColors.blue.withOpacity(0.15)
-                                  : Colors.white.withOpacity(0.04),
+                              color: isCorrect ? AppColors.success.withValues(alpha:0.2)
+                                  : isSelected ? AppColors.blue.withValues(alpha:0.15)
+                                  : Colors.white.withValues(alpha:0.04),
                               border: Border.all(color: isCorrect ? AppColors.success
                                   : isSelected ? AppColors.blue : AppColors.border),
                               borderRadius: BorderRadius.circular(7),
@@ -287,8 +292,8 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.blue.withOpacity(0.05),
-                        border: Border.all(color: AppColors.blue.withOpacity(0.2)),
+                        color: AppColors.blue.withValues(alpha:0.05),
+                        border: Border.all(color: AppColors.blue.withValues(alpha:0.2)),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -322,7 +327,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showExplanation = true),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppColors.blue.withOpacity(0.3)),
+                          side: BorderSide(color: AppColors.blue.withValues(alpha:0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
@@ -341,7 +346,7 @@ class _QuizScreenState extends State<QuizScreen> with TickerProviderStateMixin {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
-                            side: BorderSide(color: AppColors.blue.withOpacity(0.4))),
+                            side: BorderSide(color: AppColors.blue.withValues(alpha:0.4))),
                       ),
                       child: Text(
                         prov.isLastQuestion ? 'See Results →' : 'Next →',
@@ -391,8 +396,8 @@ class _ConfidenceChip extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: selected ? color.withOpacity(0.12) : AppColors.surface,
-        border: Border.all(color: selected ? color.withOpacity(0.4) : AppColors.border),
+        color: selected ? color.withValues(alpha:0.12) : AppColors.surface,
+        border: Border.all(color: selected ? color.withValues(alpha:0.4) : AppColors.border),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label,

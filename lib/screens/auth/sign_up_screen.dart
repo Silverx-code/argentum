@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/routes.dart';
 import '../../widgets/auth_widgets.dart';
 import 'email_verify_screen.dart';
 import 'sign_in_screen.dart';
@@ -204,7 +205,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   onPressed: () async {
                     final success = await auth.signInWithGoogle();
                     if (success && mounted) {
-                      Navigator.pushReplacementNamed(context, '/home');
+                      Navigator.pushReplacementNamed(context, AppRoutes.home);
                     }
                   },
                 ),

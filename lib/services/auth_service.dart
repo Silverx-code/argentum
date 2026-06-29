@@ -2,6 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../models/user_model.dart';
 import '../utils/auth_exception.dart';
@@ -10,6 +11,7 @@ class AuthService {
   // ── Singletons ────────────────────────────────────────────────────────
   final FirebaseAuth    _auth      = FirebaseAuth.instance;
   final FirebaseFirestore _db      = FirebaseFirestore.instance;
+  // google_sign_in is only used on native platforms; web uses signInWithPopup
   final GoogleSignIn    _google    = GoogleSignIn(
     scopes: ['email', 'profile'],
   );
@@ -157,31 +159,33 @@ class AuthService {
 
   Future<UserModel> signInWithGoogle() async {
     try {
-      // 1. Trigger Google account picker
-      final googleUser = await _google.signIn();
-      if (googleUser == null) {
-        // User cancelled the picker
-        throw const AuthException(
-          code: 'popup-closed-by-user',
-          message: 'Google sign-in was cancelled.',
+      late final UserCredential userCredential;
+
+      if (kIsWeb) {
+        // Web: use Firebase signInWithPopup (google_sign_in is deprecated on web)
+        userCredential = await _auth.signInWithPopup(GoogleAuthProvider());
+      } else {
+        // Native (Android/iOS): use google_sign_in plugin for native UX
+        final googleUser = await _google.signIn();
+        if (googleUser == null) {
+          throw const AuthException(
+            code: 'popup-closed-by-user',
+            message: 'Google sign-in was cancelled.',
+          );
+        }
+        final googleAuth = await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken:     googleAuth.idToken,
         );
+        userCredential = await _auth.signInWithCredential(credential);
       }
 
-      // 2. Get auth tokens
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken:     googleAuth.idToken,
-      );
-
-      // 3. Sign in to Firebase
-      final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user!;
-
-      // 4. Check if this is a new user — create Firestore doc if so.
-      // Also treat "existing user but doc missing" the same way, so an
-      // orphaned account self-heals instead of throwing on update().
+      final displayName = user.displayName ?? 'Student';
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+
+      // Create or update Firestore doc
       final docRef = _users.doc(user.uid);
       final docSnap = isNewUser ? null : await docRef.get();
 
@@ -189,7 +193,7 @@ class AuthService {
         final userModel = UserModel(
           uid:           user.uid,
           email:         user.email!,
-          displayName:   user.displayName ?? googleUser.displayName ?? 'Student',
+          displayName:   displayName,
           photoUrl:      user.photoURL,
           emailVerified: true,           // Google accounts are pre-verified
           createdAt:     DateTime.now(),
@@ -198,7 +202,6 @@ class AuthService {
         await docRef.set(userModel.toFirestore());
         return userModel;
       } else {
-        // Existing user with an existing doc — update lastLoginAt
         await docRef.update({
           'lastLoginAt':   Timestamp.fromDate(DateTime.now()),
           'emailVerified': true,
@@ -301,10 +304,14 @@ class AuthService {
   // ════════════════════════════════════════════════════════════════════
 
   Future<void> signOut() async {
-    await Future.wait([
-      _auth.signOut(),
-      _google.signOut(),
-    ]);
+    if (kIsWeb) {
+      await _auth.signOut();
+    } else {
+      await Future.wait([
+        _auth.signOut(),
+        _google.signOut(),
+      ]);
+    }
   }
 
   // ════════════════════════════════════════════════════════════════════
@@ -319,7 +326,7 @@ class AuthService {
       await _users.doc(user.uid).delete();
       // Delete Firebase Auth account
       await user.delete();
-      await _google.signOut();
+      if (!kIsWeb) await _google.signOut();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
         throw const AuthException(

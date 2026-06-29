@@ -9,79 +9,47 @@ class ArgentumLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width:  size,
-      height: size,
-      child: CustomPaint(painter: _LogoPainter()),
-    );
-  }
-}
-
-class _LogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    // Background glow
-    final bgPaint = Paint()
-      ..shader = RadialGradient(colors: [
-        const Color(0xFF1A3A6E).withOpacity(0.6),
-        Colors.transparent,
-      ]).createShader(Rect.fromCircle(center: center, radius: radius));
-    canvas.drawCircle(center, radius, bgPaint);
-
-    // Neural network nodes
-    final nodes = <Offset>[];
-    for (int i = 0; i < 10; i++) {
-      final angle = (i * 36 - 90) * (3.14159 / 180);
-      nodes.add(Offset(
-        center.dx + (radius * 0.9) * (angle > 0 ? 1 : -1) * (i % 2 == 0 ? 0.8 : 1.0),
-        center.dy + (radius * 0.9) * (i < 5 ? -1 : 1) * ((i % 3 == 0) ? 0.6 : 0.9),
-      ));
-    }
-
-    // Node lines
-    final linePaint = Paint()
-      ..color = const Color(0xFF4A9EFF).withOpacity(0.5)
-      ..strokeWidth = size.width * 0.012
-      ..style = PaintingStyle.stroke;
-    for (int i = 0; i < nodes.length; i++) {
-      canvas.drawLine(nodes[i], nodes[(i + 1) % nodes.length], linePaint);
-    }
-
-    // Nodes
-    final nodePaint = Paint()..color = const Color(0xFF4A9EFF);
-    for (final node in nodes) {
-      canvas.drawCircle(node, size.width * 0.025, nodePaint);
-    }
-
-    // S letter
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: 'S',
-        style: TextStyle(
-          fontSize:   size.width * 0.48,
-          fontWeight: FontWeight.w900,
-          foreground: Paint()
-            ..shader = const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFB0C4DE), Color(0xFF607B9E)],
-              begin: Alignment.topLeft,
-              end:   Alignment.bottomRight,
-            ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size * 0.22),
+        // Cyan-blue halo echoing the logo's neural glow
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.cyan.withValues(alpha: 0.28),
+            blurRadius: size * 0.4,
+            spreadRadius: size * 0.02,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.22),
+        child: SizedBox(
+          width:  size,
+          height: size,
+          child: Image.asset(
+            'assets/images/logo.jpeg',
+            fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width:  size,
+            height: size,
+            decoration: BoxDecoration(
+              color: AppColors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(size * 0.22),
+              border: Border.all(color: AppColors.blue.withValues(alpha: 0.2)),
+            ),
+            child: Center(
+              child: Text('A', style: TextStyle(
+                fontSize: size * 0.45,
+                fontWeight: FontWeight.w900,
+                color: AppColors.blue,
+              )),
+            ),
+          ),
         ),
       ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(center.dx - textPainter.width / 2, center.dy - textPainter.height / 2),
+        ),
     );
   }
-
-  @override
-  bool shouldRepaint(_) => false;
 }
 
 // ── Primary Button ────────────────────────────────────────────────────────
@@ -103,37 +71,56 @@ class ArgentumButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width:  double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isOutlined
-              ? Colors.transparent
-              : (color ?? AppColors.blueDark),
-          side: BorderSide(
-            color: color ?? AppColors.blue,
-            width: 1,
+    final useGradient = !isOutlined && color == null;
+    final disabled    = onPressed == null && !isLoading;
+
+    return Opacity(
+      opacity: disabled ? 0.5 : 1,
+      child: Container(
+        width:  double.infinity,
+        height: 54,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: useGradient ? AppColors.primaryGradient : null,
+          color: isOutlined ? Colors.transparent : (useGradient ? null : color),
+          border: isOutlined
+              ? Border.all(color: AppColors.blue.withValues(alpha: 0.6), width: 1.4)
+              : null,
+          // Soft electric-blue glow, echoing the logo
+          boxShadow: isOutlined
+              ? null
+              : [
+                  BoxShadow(
+                    color: (color ?? AppColors.blue).withValues(alpha: 0.35),
+                    blurRadius:  20,
+                    spreadRadius: -2,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: isLoading ? null : onPressed,
+            child: Center(
+              child: isLoading
+                  ? const SizedBox(
+                      width: 22, height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                    )
+                  : Text(
+                      label,
+                      style: TextStyle(
+                        color: isOutlined ? AppColors.textPrimary : Colors.white,
+                        letterSpacing: 0.3,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+            ),
           ),
         ),
-        child: isLoading
-            ? const SizedBox(
-                width:  20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Text(
-                label.toUpperCase(),
-                style: const TextStyle(
-                  letterSpacing: 2.5,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
       ),
     );
   }
@@ -293,9 +280,9 @@ class AuthErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color:        AppColors.error.withOpacity(0.08),
+        color:        AppColors.error.withValues(alpha:0.08),
         borderRadius: BorderRadius.circular(12),
-        border:       Border.all(color: AppColors.error.withOpacity(0.3)),
+        border:       Border.all(color: AppColors.error.withValues(alpha:0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +304,7 @@ class AuthErrorBanner extends StatelessWidget {
                   Text(
                     detail!,
                     style: TextStyle(
-                      color: AppColors.error.withOpacity(0.7),
+                      color: AppColors.error.withValues(alpha:0.7),
                       fontSize: 11,
                     ),
                   ),

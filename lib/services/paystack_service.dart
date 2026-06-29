@@ -1,8 +1,6 @@
 // lib/services/paystack_service.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:uuid/uuid.dart';
 
 class Plan {
   final String id;
@@ -24,7 +22,6 @@ class Plan {
 
 class PaystackService {
   final _db = FirebaseFirestore.instance;
-  final _uuid = const Uuid();
 
   static const List<Plan> plans = [
     Plan(
@@ -95,14 +92,7 @@ class PaystackService {
     return false;
   }
 
-  Future<void> _grantAccess(String uid, String planId, String reference) async {
-    final expiry = DateTime.now().add(const Duration(days: 30));
-    await _db.collection('users').doc(uid).update({
-      'plan': planId,
-      'subscriptionExpiry': Timestamp.fromDate(expiry),
-      'lastPaymentReference': reference,
-    });
-  }
+  // _grantAccess will be implemented when Paystack mobile SDK is integrated.
 
   Future<String> getUserPlan(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();

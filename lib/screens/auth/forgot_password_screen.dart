@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/routes.dart';
 import '../../widgets/auth_widgets.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -159,9 +160,9 @@ class _SentState extends StatelessWidget {
         Container(
           width: 80, height: 80,
           decoration: BoxDecoration(
-            color:  AppColors.success.withOpacity(0.1),
+            color:  AppColors.success.withValues(alpha:0.1),
             shape:  BoxShape.circle,
-            border: Border.all(color: AppColors.success.withOpacity(0.3)),
+            border: Border.all(color: AppColors.success.withValues(alpha:0.3)),
           ),
           child: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 36),
         ),
@@ -176,7 +177,7 @@ class _SentState extends StatelessWidget {
         const SizedBox(height: 32),
         ArgentumButton(
           label:     'Back to Sign In',
-          onPressed: () => Navigator.pushReplacementNamed(context, '/signin'),
+          onPressed: () => Navigator.pushReplacementNamed(context, AppRoutes.signIn),
         ),
       ],
     );

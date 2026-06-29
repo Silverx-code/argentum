@@ -65,9 +65,9 @@ class _TestSetupScreenState extends State<TestSetupScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: _mode == m.id ? AppColors.blue.withOpacity(0.08) : AppColors.surface,
+                    color: _mode == m.id ? AppColors.blue.withValues(alpha:0.08) : AppColors.surface,
                     border: Border.all(
-                        color: _mode == m.id ? AppColors.blue.withOpacity(0.4) : AppColors.border),
+                        color: _mode == m.id ? AppColors.blue.withValues(alpha:0.4) : AppColors.border),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(children: [
@@ -151,7 +151,7 @@ class _TestSetupScreenState extends State<TestSetupScreen> {
                 activeTrackColor: AppColors.blue,
                 inactiveTrackColor: AppColors.border,
                 thumbColor: AppColors.blue,
-                overlayColor: AppColors.blue.withOpacity(0.1),
+                overlayColor: AppColors.blue.withValues(alpha:0.1),
               ),
               child: Slider(
                 value: _questionCount.toDouble(),
@@ -228,8 +228,8 @@ class _DiffChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? c.withOpacity(0.12) : AppColors.surface,
-          border: Border.all(color: selected ? c.withOpacity(0.4) : AppColors.border),
+          color: selected ? c.withValues(alpha:0.12) : AppColors.surface,
+          border: Border.all(color: selected ? c.withValues(alpha:0.4) : AppColors.border),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(label,

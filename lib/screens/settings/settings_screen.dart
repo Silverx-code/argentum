@@ -21,6 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _stats;
   String _currentPlan = 'starter';
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _load() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) { setState(() => _loading = false); return; }
+    setState(() { _loading = true; _error = null; });
     try {
       final results = await Future.wait([
         _api.getStats(),
@@ -41,8 +43,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _stats = results[0] as Map<String, dynamic>;
         _currentPlan = results[1] as String;
         _loading = false;
+        _error = null;
       });
-    } catch (_) { setState(() => _loading = false); }
+    } catch (_) {
+      setState(() { _loading = false; _error = 'Failed to load settings. Check your connection.'; });
+    }
   }
 
   @override
@@ -62,7 +67,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.blue))
-          : ListView(
+          : _error != null
+              ? Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.cloud_off, color: AppColors.textDim, size: 40),
+                    const SizedBox(height: 12),
+                    Text(_error!, style: const TextStyle(fontSize: 12, color: AppColors.textDim,
+                        fontFamily: 'monospace'), textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _load,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.blue.withValues(alpha: 0.1),
+                          border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const MonoLabel('Tap to Retry', color: AppColors.blue),
+                      ),
+                    ),
+                  ]),
+                )
+              : ListView(
               padding: const EdgeInsets.all(16),
               children: [
 
@@ -124,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () => auth.signOut(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,
-                      side: BorderSide(color: AppColors.error.withOpacity(0.3)),
+                      side: BorderSide(color: AppColors.error.withValues(alpha:0.3)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
@@ -240,16 +267,16 @@ class _ProfileCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.blueDarker.withOpacity(0.6), AppColors.surface],
+          colors: [AppColors.blueDarker.withValues(alpha:0.6), AppColors.surface],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.blue.withOpacity(0.15)),
+        border: Border.all(color: AppColors.blue.withValues(alpha:0.15)),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(children: [
         CircleAvatar(
           radius: 28,
-          backgroundColor: AppColors.blue.withOpacity(0.15),
+          backgroundColor: AppColors.blue.withValues(alpha:0.15),
           child: Text(
             (user?.displayName ?? 'S')[0].toUpperCase(),
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
@@ -289,8 +316,8 @@ class _PlanBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha:0.1),
+        border: Border.all(color: color.withValues(alpha:0.3)),
         borderRadius: BorderRadius.circular(6),
       ),
       child: MonoLabel(plan.toUpperCase(), color: color, fontSize: 7),
@@ -310,7 +337,7 @@ class _PlanCard extends StatelessWidget {
     final borderColor = isActive
         ? AppColors.success
         : isPopular
-            ? AppColors.blue.withOpacity(0.3)
+            ? AppColors.blue.withValues(alpha:0.3)
             : AppColors.border;
 
     return Container(

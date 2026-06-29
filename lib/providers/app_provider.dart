@@ -18,23 +18,29 @@ class AppProvider extends ChangeNotifier {
   // ─── Topics ─────────────────────────────────────────────────────────
   List<Topic> _topics = [];
   bool _topicsLoading = false;
+  String? _topicsError;
 
   List<Topic> get topics => _topics;
   bool get topicsLoading => _topicsLoading;
+  String? get topicsError => _topicsError;
 
   // ─── Weaknesses ─────────────────────────────────────────────────────
   List<Weakness> _weaknesses = [];
   List<Map<String, dynamic>> _suggestedRecovery = [];
+  String? _weaknessesError;
 
   List<Weakness> get weaknesses => _weaknesses;
   List<Map<String, dynamic>> get suggestedRecovery => _suggestedRecovery;
+  String? get weaknessesError => _weaknessesError;
 
   // ─── Files ──────────────────────────────────────────────────────────
   List<UploadedFileRecord> _files = [];
   bool _filesLoading = false;
+  String? _filesError;
 
   List<UploadedFileRecord> get files => _files;
   bool get filesLoading => _filesLoading;
+  String? get filesError => _filesError;
 
   // ─── Active test session ────────────────────────────────────────────
   TestSession? _activeSession;
@@ -83,11 +89,14 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> loadTopics() async {
     _topicsLoading = true;
+    _topicsError = null;
     notifyListeners();
     try {
       final data = await _api.getTopics();
       _topics = data.map(Topic.fromJson).toList();
-    } catch (_) {} finally {
+    } catch (_) {
+      _topicsError = 'Failed to load topics';
+    } finally {
       _topicsLoading = false;
       notifyListeners();
     }
@@ -96,24 +105,30 @@ class AppProvider extends ChangeNotifier {
   // ─── Load weaknesses ────────────────────────────────────────────────
 
   Future<void> loadWeaknesses() async {
+    _weaknessesError = null;
     try {
       final data = await _api.getWeaknesses();
       _weaknesses = data.map(Weakness.fromJson).toList();
       final recovery = await _api.getSuggestedRecovery();
       _suggestedRecovery = recovery;
-      notifyListeners();
-    } catch (_) {}
+    } catch (_) {
+      _weaknessesError = 'Failed to load weaknesses';
+    }
+    notifyListeners();
   }
 
   // ─── Load files ─────────────────────────────────────────────────────
 
   Future<void> loadFiles() async {
     _filesLoading = true;
+    _filesError = null;
     notifyListeners();
     try {
       final data = await _api.listFiles();
       _files = data.map(UploadedFileRecord.fromJson).toList();
-    } catch (_) {} finally {
+    } catch (_) {
+      _filesError = 'Failed to load files';
+    } finally {
       _filesLoading = false;
       notifyListeners();
     }

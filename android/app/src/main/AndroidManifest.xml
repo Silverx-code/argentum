@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for Firebase Auth/Firestore and Dio API calls. Release builds
+         do NOT auto-add this (only the debug manifest does), so it must be here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <application
         android:label="argentum"
         android:name="${applicationName}"

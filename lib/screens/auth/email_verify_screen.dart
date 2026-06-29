@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/routes.dart';
 import '../../widgets/auth_widgets.dart';
 
 class EmailVerifyScreen extends StatefulWidget {
@@ -39,7 +40,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
     final auth     = context.read<AuthProvider>();
     final verified = await auth.checkEmailVerified();
     if (verified && mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     }
     if (mounted) setState(() => _checking = false);
   }
@@ -47,8 +48,23 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
   Future<void> _resend() async {
     if (_resendCooldown > 0) return;
     final auth = context.read<AuthProvider>();
-    await auth.resendVerificationEmail();
-    // 60-second cooldown
+    auth.clearError();
+    final sent = await auth.resendVerificationEmail();
+    if (!mounted) return;
+
+    if (!sent) {
+      // Failure reason is shown by the error banner (build watches AuthProvider).
+      // Don't start the cooldown — let the user retry once the issue clears.
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Verification email sent. Check your inbox — and your spam folder.'),
+      ),
+    );
+
+    // 60-second cooldown, only after a successful send
     setState(() => _resendCooldown = 60);
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_resendCooldown <= 0) {
@@ -91,6 +107,18 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
               // ── Title ──────────────────────────────────────────────
               Text('Verify Your Email', style: AppText.heading2),
               const SizedBox(height: 12),
+
+              // ── Error banner ───────────────────────────────────────
+              // Surfaces real Firebase send failures (e.g. too-many-requests
+              // throttling) instead of silently doing nothing.
+              if (auth.errorMessage != null) ...[
+                AuthErrorBanner(
+                  message:   auth.errorMessage!,
+                  detail:    auth.errorDetail,
+                  onDismiss: auth.clearError,
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // ── Body ───────────────────────────────────────────────
               RichText(
@@ -178,7 +206,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
               TextButton(
                 onPressed: () async {
                   await auth.signOut();
-                  if (mounted) Navigator.pushReplacementNamed(context, '/signin');
+                  if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.signIn);
                 },
                 child: const Text(
                   'Sign out and use different account',

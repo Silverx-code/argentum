@@ -54,10 +54,10 @@ class ResultsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.blueDark.withOpacity(0.5), AppColors.blueDarker.withOpacity(0.8)],
+                    colors: [AppColors.blueDark.withValues(alpha:0.5), AppColors.blueDarker.withValues(alpha:0.8)],
                     begin: Alignment.topLeft, end: Alignment.bottomRight,
                   ),
-                  border: Border.all(color: AppColors.blue.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.blue.withValues(alpha:0.2)),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(children: [
@@ -94,8 +94,8 @@ class ResultsScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(colors: [
-                        AppColors.error.withOpacity(0.12), AppColors.error.withOpacity(0.05)]),
-                      border: Border.all(color: AppColors.error.withOpacity(0.25)),
+                        AppColors.error.withValues(alpha:0.12), AppColors.error.withValues(alpha:0.05)]),
+                      border: Border.all(color: AppColors.error.withValues(alpha:0.25)),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(children: [
@@ -110,7 +110,7 @@ class ResultsScreen extends StatelessWidget {
                           weakTopics.isNotEmpty
                               ? '${weakTopics.map((w) => w['topic']).take(2).join(' + ')} · Focused 10Q'
                               : 'Targeted recovery session ready',
-                          color: AppColors.error.withOpacity(0.8),
+                          color: AppColors.error.withValues(alpha:0.8),
                         ),
                       ])),
                       Icon(Icons.arrow_forward_ios, color: AppColors.error, size: 14),
@@ -230,8 +230,8 @@ class _ScoreBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.blue.withOpacity(0.08),
-        border: Border.all(color: AppColors.blue.withOpacity(0.15)),
+        color: AppColors.blue.withValues(alpha:0.08),
+        border: Border.all(color: AppColors.blue.withValues(alpha:0.15)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(children: [
@@ -301,7 +301,7 @@ class _ReviewItemState extends State<_ReviewItem> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha:0.2)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -309,8 +309,8 @@ class _ReviewItemState extends State<_ReviewItem> {
             Container(
               width: 22, height: 22,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                border: Border.all(color: color.withOpacity(0.3)),
+                color: color.withValues(alpha:0.1),
+                border: Border.all(color: color.withValues(alpha:0.3)),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Center(child: Icon(
@@ -335,8 +335,8 @@ class _ReviewItemState extends State<_ReviewItem> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.blue.withOpacity(0.04),
-                border: Border.all(color: AppColors.blue.withOpacity(0.1)),
+                color: AppColors.blue.withValues(alpha:0.04),
+                border: Border.all(color: AppColors.blue.withValues(alpha:0.1)),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(r['explanation'] as String? ?? '',
@@ -356,7 +356,7 @@ class _ReviewItemState extends State<_ReviewItem> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(value, style: TextStyle(fontSize: 10, color: color,

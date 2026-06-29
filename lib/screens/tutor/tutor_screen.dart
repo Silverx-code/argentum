@@ -51,12 +51,13 @@ class _TutorScreenState extends State<TutorScreen> {
     _scrollToBottom();
 
     final prov = context.read<AppProvider>();
-    final weakTopics = prov.weaknesses.take(2).map((w) => w.topic).join(', ');
 
     try {
       final resp = await _api.chatWithTutor(
         message: text,
-        topicContext: prov.topics.isNotEmpty ? prov.topics.first.name : null,
+        topicContext: prov.weaknesses.isNotEmpty
+            ? prov.weaknesses.first.topic
+            : (prov.topics.isNotEmpty ? prov.topics.first.name : null),
         conversationHistory: _history,
       );
 
@@ -171,7 +172,7 @@ class _TutorScreenState extends State<TutorScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    border: Border.all(color: AppColors.blue.withOpacity(0.2)),
+                    border: Border.all(color: AppColors.blue.withValues(alpha:0.2)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: MonoLabel(_quickPrompts[i], color: AppColors.blue, fontSize: 8),
@@ -186,7 +187,7 @@ class _TutorScreenState extends State<TutorScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: Border.all(color: AppColors.blue.withOpacity(0.2)),
+            border: Border.all(color: AppColors.blue.withValues(alpha:0.2)),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(children: [
@@ -213,10 +214,10 @@ class _TutorScreenState extends State<TutorScreen> {
                 width: 36, height: 36,
                 decoration: BoxDecoration(
                   color: _loading
-                      ? AppColors.blueDark.withOpacity(0.3)
+                      ? AppColors.blueDark.withValues(alpha:0.3)
                       : AppColors.blueDark,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.blue.withOpacity(0.4)),
+                  border: Border.all(color: AppColors.blue.withValues(alpha:0.4)),
                 ),
                 child: _loading
                     ? const Center(child: SizedBox(width: 14, height: 14,
@@ -255,7 +256,7 @@ class _WelcomeView extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              border: Border.all(color: AppColors.blue.withOpacity(0.12)),
+              border: Border.all(color: AppColors.blue.withValues(alpha:0.12)),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Column(children: [
@@ -309,11 +310,11 @@ class _ChatBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isUser
-                    ? AppColors.blueDark.withOpacity(0.6)
+                    ? AppColors.blueDark.withValues(alpha:0.6)
                     : AppColors.surface,
                 border: Border.all(
                     color: isUser
-                        ? AppColors.blue.withOpacity(0.3)
+                        ? AppColors.blue.withValues(alpha:0.3)
                         : AppColors.border),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
@@ -384,7 +385,7 @@ class _TypingBubbleState extends State<_TypingBubble>
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 width: 6, height: 6,
                 decoration: BoxDecoration(
-                  color: AppColors.blue.withOpacity(
+                  color: AppColors.blue.withValues(alpha:
                       0.3 + (i == 1 ? _anim.value * 0.7 : 0)),
                   borderRadius: BorderRadius.circular(3),
                 ),

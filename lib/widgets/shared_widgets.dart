@@ -38,8 +38,8 @@ class ArgTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha:0.1),
+        border: Border.all(color: color.withValues(alpha:0.3)),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -83,7 +83,7 @@ class PrimaryButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: (color ?? AppColors.blue).withOpacity(0.5)),
+            side: BorderSide(color: (color ?? AppColors.blue).withValues(alpha:0.5)),
           ),
         ),
         child: loading
@@ -150,7 +150,7 @@ class AccuracyBar extends StatelessWidget {
       child: LinearProgressIndicator(
         value: accuracy / 100,
         minHeight: height,
-        backgroundColor: Colors.white.withOpacity(0.05),
+        backgroundColor: Colors.white.withValues(alpha:0.05),
         valueColor: AlwaysStoppedAnimation(_color),
       ),
     );
@@ -197,10 +197,10 @@ class ArgNavBar extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.95),
-        border: Border.all(color: AppColors.blue.withOpacity(0.15)),
+        color: AppColors.surface.withValues(alpha:0.95),
+        border: Border.all(color: AppColors.blue.withValues(alpha:0.15)),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha:0.4), blurRadius: 20)],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -213,7 +213,7 @@ class ArgNavBar extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: active ? AppColors.blue.withOpacity(0.12) : Colors.transparent,
+                color: active ? AppColors.blue.withValues(alpha:0.12) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(mainAxisSize: MainAxisSize.min, children: [

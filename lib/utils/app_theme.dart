@@ -2,23 +2,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// Palette tuned to the Argentum logo: an electric-blue neural ring with
+/// bright cyan glowing nodes and a silvery-white "S" on a deep navy-black.
 class AppColors {
-  static const background    = Color(0xFF08090D);
-  static const surface       = Color(0xFF0F1117);
-  static const surfaceLight  = Color(0xFF141720);
-  static const border        = Color(0xFF1E2235);
-  static const blue          = Color(0xFF3B82F6);
-  static const blueDark      = Color(0xFF1D3C6E);
-  static const blueDarker    = Color(0xFF0D1F3C);
-  static const blueGlow      = Color(0xFF0D1830); // subtle blue tint bg
-  static const textPrimary   = Color(0xFFE8ECF7);
-  static const textSecondary = Color(0xFFB8BFD4);
-  static const textDim       = Color(0xFF5A617A);
-  static const textFaint     = Color(0xFF363D52); // very dim, for splash
-  static const success       = Color(0xFF22C55E);
-  static const warning       = Color(0xFFF59E0B);
-  static const error         = Color(0xFFEF4444);
-  static const accent        = Color(0xFF60A5FA);
+  // Deep navy-black backdrop (blue undertone, softer & warmer than pure black)
+  static const background    = Color(0xFF070A12);
+  static const surface       = Color(0xFF0E1422);
+  static const surfaceLight  = Color(0xFF18223A);
+  static const border        = Color(0xFF243149);
+
+  // Brand blues — the glowing ring
+  static const blue          = Color(0xFF3B97FF); // electric blue (primary)
+  static const blueDark      = Color(0xFF1E4E8F);
+  static const blueDarker    = Color(0xFF0E2547);
+  static const blueGlow      = Color(0xFF0E1F3D); // subtle blue tint bg
+
+  // Cyan node-glow accent + silvery "S" highlight
+  static const cyan          = Color(0xFF5CD2FF); // bright node glow
+  static const silver        = Color(0xFFD7E3F5); // metallic S tone
+
+  // Text — cool silvery whites
+  static const textPrimary   = Color(0xFFEAF1FF);
+  static const textSecondary = Color(0xFFB2BDD6);
+  static const textDim       = Color(0xFF6B7693);
+  static const textFaint     = Color(0xFF38415A); // very dim, for splash
+
+  // Status — slightly softened for a friendlier feel
+  static const success       = Color(0xFF34D399);
+  static const warning       = Color(0xFFFBBF24);
+  static const error         = Color(0xFFF87171);
+  static const accent        = Color(0xFF5CD2FF);
+
+  // Signature blue→cyan glow gradient (buttons, logo, accents)
+  static const primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end:   Alignment.bottomRight,
+    colors: [Color(0xFF3B97FF), Color(0xFF5CD2FF)],
+  );
 }
 
 // ── Text styles used across screens ────────────────────────────────────────
@@ -27,22 +47,22 @@ class AppText {
 
   static const heading1 = TextStyle(
     fontSize: 28,
-    fontWeight: FontWeight.w900,
+    fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   );
 
   static const heading2 = TextStyle(
     fontSize: 22,
-    fontWeight: FontWeight.w800,
+    fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   );
 
   static const body = TextStyle(
-    fontSize: 13,
+    fontSize: 13.5,
     color: AppColors.textSecondary,
-    height: 1.6,
+    height: 1.55,
   );
 
   static const mono = TextStyle(
@@ -68,10 +88,33 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.blue,
-        secondary: AppColors.accent,
+        onPrimary: Colors.white,
+        secondary: AppColors.cyan,
         surface: AppColors.surface,
         error: AppColors.error,
       ),
+      cardTheme: CardThemeData(
+        color: AppColors.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.border),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.blue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.cyan,
+        selectionHandleColor: AppColors.cyan,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.cyan),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -85,24 +128,26 @@ class AppTheme {
         iconTheme: IconThemeData(color: AppColors.textSecondary),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        filled: true, fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        filled: true, fillColor: AppColors.surfaceLight,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         hintStyle: const TextStyle(color: AppColors.textDim, fontSize: 13),
         labelStyle: const TextStyle(color: AppColors.textDim, fontSize: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.blue, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.blue, width: 1.6)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: AppColors.error)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.error, width: 1.6)),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.surfaceLight,
         contentTextStyle: const TextStyle(color: AppColors.textPrimary,
-            fontFamily: 'monospace', fontSize: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            fontSize: 13, fontWeight: FontWeight.w500),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         behavior: SnackBarBehavior.floating, elevation: 0,
       ),
       dialogTheme: DialogThemeData(

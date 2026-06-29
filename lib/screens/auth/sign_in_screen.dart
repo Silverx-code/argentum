@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/routes.dart';
 import '../../widgets/auth_widgets.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
@@ -48,7 +49,7 @@ class _SignInScreenState extends State<SignInScreen> {
         MaterialPageRoute(builder: (_) => const EmailVerifyScreen()),
       );
     } else {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     }
   }
 
@@ -156,7 +157,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   onPressed: () async {
                     final success = await auth.signInWithGoogle();
                     if (success && mounted) {
-                      Navigator.pushReplacementNamed(context, '/home');
+                      Navigator.pushReplacementNamed(context, AppRoutes.home);
                     }
                   },
                 ),

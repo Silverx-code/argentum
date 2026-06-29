@@ -175,10 +175,10 @@ class _RecoveryCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: [
-          AppColors.error.withOpacity(0.08),
-          AppColors.error.withOpacity(0.03),
+          AppColors.error.withValues(alpha:0.08),
+          AppColors.error.withValues(alpha:0.03),
         ]),
-        border: Border.all(color: AppColors.error.withOpacity(0.2)),
+        border: Border.all(color: AppColors.error.withValues(alpha:0.2)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -204,13 +204,13 @@ class _RecoveryCard extends StatelessWidget {
           child: ElevatedButton(
             onPressed: onStart,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error.withOpacity(0.15),
+              backgroundColor: AppColors.error.withValues(alpha:0.15),
               foregroundColor: AppColors.error,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: AppColors.error.withOpacity(0.3)),
+                side: BorderSide(color: AppColors.error.withValues(alpha:0.3)),
               ),
             ),
             child: onStart == null
@@ -241,7 +241,7 @@ class _WeaknessRow extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha:0.15)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(children: [
@@ -261,8 +261,8 @@ class _WeaknessRow extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
-              border: Border.all(color: color.withOpacity(0.2)),
+              color: color.withValues(alpha:0.08),
+              border: Border.all(color: color.withValues(alpha:0.2)),
               borderRadius: BorderRadius.circular(10),
             ),
             child: MonoLabel('Fix →', color: color, fontSize: 9),
@@ -331,7 +331,7 @@ class _MasteryCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: color.withOpacity(isMastered ? 0.3 : 0.1)),
+        border: Border.all(color: color.withValues(alpha:isMastered ? 0.3 : 0.1)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -351,8 +351,8 @@ class _MasteryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
-                border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                color: AppColors.success.withValues(alpha:0.1),
+                border: Border.all(color: AppColors.success.withValues(alpha:0.3)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const MonoLabel('MASTERED', color: AppColors.success, fontSize: 7),
@@ -367,10 +367,10 @@ class _MasteryCard extends StatelessWidget {
               width: 28, height: 28,
               decoration: BoxDecoration(
                 color: i < sessions
-                    ? color.withOpacity(0.15)
-                    : Colors.white.withOpacity(0.03),
+                    ? color.withValues(alpha:0.15)
+                    : Colors.white.withValues(alpha:0.03),
                 border: Border.all(color: i < sessions
-                    ? color.withOpacity(0.4) : AppColors.border),
+                    ? color.withValues(alpha:0.4) : AppColors.border),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(child: Icon(
@@ -393,7 +393,7 @@ class _MasteryCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
                 color: (h.toDouble() >= 0.85 ? AppColors.success : AppColors.warning)
-                    .withOpacity(0.1),
+                    .withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text('${(h.toDouble() * 100).toStringAsFixed(0)}%',
